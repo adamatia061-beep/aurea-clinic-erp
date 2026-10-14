@@ -1,0 +1,2 @@
+# aurea-clinic-erp
+.
