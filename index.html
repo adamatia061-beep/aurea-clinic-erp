@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أوريا ERP - نظام إدارة الخدمات والإجراءات الطبية والتجميلية</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Cairo Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased bg-slate-50 min-h-screen flex flex-col justify-between">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed top-5 left-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- MAIN WRAPPER -->
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- 30-DAY TRIAL TOP BAR (VISIBLE IN ERP APP) -->
+        <div id="trial-banner" class="bg-gradient-to-r from-teal-800 via-teal-700 to-emerald-800 text-white px-4 py-2.5 shadow-md flex items-center justify-between text-xs sm:text-sm font-medium z-30 transition-all hidden">
+            <div class="flex items-center gap-2">
+                <span class="flex h-2.5 w-2.5 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+                </span>
+                <span>فترة التجربة المجانية (30 يومًا) نشطة حالياً.[cite: 3]</span>
+                <span class="bg-teal-900/60 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-teal-500/30 hidden md:inline-block" id="trial-days-left">متبقي 30 يوماً[cite: 3]</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openTrialModal()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-3 py-1 rounded-md transition shadow-sm text-xs">ترقية الاشتراك الآن</button>
+                <button onclick="dismissTrialBanner()" class="text-teal-200 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+        </div>
+
+        <!-- PUBLIC LANDING PAGE & LOGIN SECTION -->
+        <div id="landing-page" class="flex-1 flex flex-col">
+
+            <!-- Navbar -->
+            <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-teal-600 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-teal-500/20">
+                            <i data-lucide="sparkles" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-extrabold text-xl text-slate-900 tracking-tight">أوريا <span class="text-teal-600">Aurea ERP</span></h1>
+                            <p class="text-xs text-slate-500 font-medium">نظام إدارة المراكز الطبية والخدمات التجميلية[cite: 3]</p>
+                        </div>
+                    </div>
+
+                    <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+                        <a href="#features" class="hover:text-teal-600 transition">المميزات[cite: 3]</a>
+                        <a href="#services-demo" class="hover:text-teal-600 transition">إدارة الجلسات[cite: 3]</a>
+                        <a href="#pricing" class="hover:text-teal-600 transition">الباقات[cite: 3]</a>
+                    </nav>
+
+                    <div class="flex items-center gap-3">
+                        <button onclick="openTrialModal()" class="hidden sm:inline-flex items-center gap-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 font-bold px-4 py-2.5 rounded-xl text-sm transition">
+                            <i data-lucide="gift" class="w-4 h-4"></i>
+                            تجربة 30 يوم مجاناً[cite: 3]
+                        </button>
+                        <button onclick="scrollToLogin()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-teal-600/20 transition text-sm flex items-center gap-2">
+                            <i data-lucide="log-in" class="w-4 h-4"></i>
+                            دخول النظام[cite: 3]
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Hero Section -->
+            <section class="relative py-16 lg:py-24 overflow-hidden bg-gradient-to-b from-teal-50/50 via-white to-slate-50">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div class="grid lg:grid-cols-12 gap-12 items-center">
+                        <div class="lg:col-span-7 space-y-6 text-center lg:text-right">
+                            <div class="inline-flex items-center gap-2 bg-teal-100/80 text-teal-800 text-xs font-bold px-3.5 py-1.5 rounded-full border border-teal-200">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-teal-600"></i>
+                                مخصص للمراكز الطبية، التجميلية، والعلاج الطبيعي[cite: 3]
+                            </div>
+                            <h1 class="text-3xl sm:text-5xl font-black text-slate-900 leading-tight">
+                                المنظومة المتكاملة لإدارة <span class="text-teal-600">الخدمات والجلسات الطبية</span> والاحترافية[cite: 3]
+                            </h1>
+                            <p class="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl">
+                                حل رقمي شامل ومصمم خصيصاً لإدارة العيادات والمراكز التي تقدم خدمات والإجراءات متخصصة. متابعة دقيقة للمواعيد، تقارير الجلسات، دليل الخدمات، الفواتير الضريبية، وحسابات الأخصائيين بكل سهولة[cite: 3].
+                            </p>
+
+                            <!-- Quick Specs Tags -->
+                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2 text-xs font-semibold text-slate-600">
+                                <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm"><i data-lucide="x-circle" class="w-4 h-4 text-rose-500"></i> خالي تماماً من الصيدليات والأدوية[cite: 3]</span>
+                                <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm"><i data-lucide="file-text" class="w-4 h-4 text-teal-600"></i> توثيق الجلسات والتوصيات[cite: 3]</span>
+                                <span class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm"><i data-lucide="receipt" class="w-4 h-4 text-teal-600"></i> فاتورة ضريبية 5% معتمدة[cite: 3]</span>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4">
+                                <button onclick="openTrialModal()" class="w-full sm:w-auto bg-gradient-to-r from-teal-600 to-emerald-600 text-white font-bold px-8 py-4 rounded-xl shadow-lg shadow-teal-600/30 hover:scale-105 transition duration-200 flex items-center justify-center gap-2 text-base">
+                                    <i data-lucide="rocket" class="w-5 h-5"></i>
+                                    ابدأ التجربة المجانية (30 يوماً)[cite: 3]
+                                </button>
+                                <button onclick="scrollToLogin()" class="w-full sm:w-auto bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold px-6 py-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-base">
+                                    <i data-lucide="play-circle" class="w-5 h-5 text-teal-600"></i>
+                                    تجربة الدخول السريع[cite: 3]
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Login Gate Box -->
+                        <div id="login-section" class="lg:col-span-5 bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-100">
+                            <div class="text-center mb-6">
+                                <div class="inline-flex p-3 bg-teal-50 text-teal-600 rounded-2xl mb-2">
+                                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-900">تسجيل الدخول إلى النظام[cite: 3]</h3>
+                                <p class="text-xs text-slate-500 mt-1">اختر صفة الدخول للتجربة المباشرة فوراً[cite: 3]</p>
+                            </div>
+
+                            <!-- Role Switch Fast Login -->
+                            <div class="space-y-3 mb-6">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block">تجربة سريعة بأدوار مختلفة:[cite: 3]</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="loginAs('admin')" class="p-2.5 border border-teal-200 hover:border-teal-500 bg-teal-50/50 rounded-xl text-center transition group">
+                                        <i data-lucide="user-cog" class="w-5 h-5 text-teal-600 mx-auto mb-1 group-hover:scale-110 transition"></i>
+                                        <span class="block text-xs font-bold text-slate-800">مدير النظام[cite: 3]</span>
+                                    </button>
+                                    <button onclick="loginAs('specialist')" class="p-2.5 border border-emerald-200 hover:border-emerald-500 bg-emerald-50/50 rounded-xl text-center transition group">
+                                        <i data-lucide="stethoscope" class="w-5 h-5 text-emerald-600 mx-auto mb-1 group-hover:scale-110 transition"></i>
+                                        <span class="block text-xs font-bold text-slate-800">دكتور / أخصائي[cite: 3]</span>
+                                    </button>
+                                    <button onclick="loginAs('reception')" class="p-2.5 border border-sky-200 hover:border-sky-500 bg-sky-50/50 rounded-xl text-center transition group">
+                                        <i data-lucide="headphones" class="w-5 h-5 text-sky-600 mx-auto mb-1 group-hover:scale-110 transition"></i>
+                                        <span class="block text-xs font-bold text-slate-800">الاستقبال[cite: 3]</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <form onsubmit="handleManualLogin(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم المستخدم / البريد الإلكتروني[cite: 3]</label>
+                                    <input type="text" id="login-username" value="admin@aurea.clinic" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">كلمة المرور[cite: 3]</label>
+                                    <input type="password" id="login-password" value="••••••••" required class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50">
+                                </div>
+                                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl transition shadow-md flex items-center justify-center gap-2 text-sm">
+                                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                                    دخول لوحة التحكم[cite: 3]
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Highlights Section -->
+            <section id="features" class="py-16 bg-white border-t border-slate-100">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-2xl mx-auto mb-12">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">مصمم لتلبية احتياجات المراكز الخدمية والطبية[cite: 3]</h2>
+                        <p class="text-slate-500 text-sm mt-2">تركيز كامل على مواعيد وتفاصيل الجلسات والتخصصات دون أي تعقيدات إضافية[cite: 3]</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center mb-4">
+                                <i data-lucide="calendar-range" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-slate-900 mb-2">إدارة الحجوزات والجلسات[cite: 3]</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">تنظيم كامل لجدول الجلسات اليومي، ربط الخدمة بالأخصائي المعالج، وتحديث حالة الجلسة لحظياً[cite: 3].</p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+                                <i data-lucide="file-check" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-slate-900 mb-2">توثيق تقارير الإجراءات[cite: 3]</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">سجل طبي وإجرائي لكل جلسة يشمل ملاحظات الأخصائي، التوصيات القادمة، وإمكانية طباعة تقرير مخصص للعميل[cite: 3].</p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:shadow-md transition">
+                            <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center mb-4">
+                                <i data-lucide="receipt" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-slate-900 mb-2">فوترة ضريبية مخصصة[cite: 3]</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed">إصدار فواتير ضريبية مبسطة (5% VAT) تدعم الخصومات، المبالغ المتبقية، وسائل الدفع المتعددة وطباعة ملائمة[cite: 3].</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-auto bg-slate-900 text-slate-400 py-8 text-xs border-t border-slate-800">
+                <div class="max-w-7xl mx-auto px-4 text-center sm:flex sm:justify-between sm:items-center">
+                    <p>© 2026 نظام أوريا ERP لخدمات العيادات والإجراءات الطبية. جميع الحقوق محفوظة.[cite: 3]</p>
+                    <div class="flex justify-center gap-4 mt-4 sm:mt-0">
+                        <a href="#" class="hover:text-white">الشروط والأحكام[cite: 3]</a>
+                        <a href="#" class="hover:text-white">سياسة الخصوصية[cite: 3]</a>
+                        <a href="#" class="hover:text-white">الدعم الفني[cite: 3]</a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- MAIN ERP MANAGEMENT DASHBOARD APP (HIDDEN UNTIL LOGIN) -->
+        <div id="erp-app" class="flex-1 flex flex-col md:flex-row min-h-screen bg-slate-100 hidden">
+
+            <!-- Sidebar Navigation -->
+            <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col justify-between border-l border-slate-800 no-print">
+                <div>
+                    <!-- Sidebar Header -->
+                    <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center text-white font-black shadow-md">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-white text-base">نظام أوريا ERP[cite: 3]</h2>
+                                <p class="text-[11px] text-teal-400 font-medium">الخدمات والإجراءات الطبية[cite: 3]</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Info Card -->
+                    <div class="px-4 py-3 m-3 bg-slate-800/80 rounded-xl border border-slate-700/50 flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center font-bold text-xs" id="current-user-avatar">
+                            م
+                        </div>
+                        <div class="overflow-hidden">
+                            <h4 class="text-xs font-bold text-white truncate" id="current-user-name">مدير النظام[cite: 3]</h4>
+                            <p class="text-[10px] text-slate-400 truncate" id="current-user-role">ADMINISTRATOR[cite: 3]</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Links -->
+                    <nav class="p-3 space-y-1">
+                        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-white bg-teal-600">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                            الرئيسية[cite: 3]
+                        </button>
+
+                        <button onclick="switchTab('services')" id="nav-services" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                            <i data-lucide="list-checks" class="w-4 h-4"></i>
+                            دليل الخدمات والإجراءات[cite: 3]
+                        </button>
+
+                        <button onclick="switchTab('bookings')" id="nav-bookings" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            جدول الجلسات والمواعيد[cite: 3]
+                        </button>
+
+                        <button onclick="switchTab('session-reports')" id="nav-session-reports" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                            <i data-lucide="file-text" class="w-4 h-4"></i>
+                            تقارير الجلسات الإجرائية[cite: 3]
+                        </button>
+
+                        <button onclick="switchTab('invoicing')" id="nav-invoicing" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                            <i data-lucide="receipt" class="w-4 h-4"></i>
+                            الفواتير والمدفوعات[cite: 3]
+                        </button>
+
+                        <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:text-white hover:bg-slate-800">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                            التحليلات والتقارير[cite: 3]
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Logout Bottom Area -->
+                <div class="p-4 border-t border-slate-800 space-y-2">
+                    <button onclick="openTrialModal()" class="w-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/30 font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        تجربة 30 يوم مجاناً[cite: 3]
+                    </button>
+                    <button onclick="logout()" class="w-full text-rose-400 hover:bg-rose-500/10 font-bold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        تسجيل الخروج[cite: 3]
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main ERP Workspace Content -->
+            <main class="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar">
+
+                <!-- Header Bar -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 no-print">
+                    <div>
+                        <h2 id="page-title" class="text-2xl font-black text-slate-900">لوحة التحكم الرئيسية[cite: 3]</h2>
+                        <p id="page-subtitle" class="text-xs text-slate-500 mt-1">ملخص نشاط الجلسات، الخدمات والإيرادات اليومية[cite: 3]</p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button onclick="openBookingModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-md text-xs flex items-center gap-2 transition">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            حجز جلسة جديدة[cite: 3]
+                        </button>
+                        <button onclick="openServiceModal()" class="bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            إضافة خدمة[cite: 3]
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 1: DASHBOARD -->
+                <div id="tab-dashboard" class="tab-content space-y-6">
+                    <!-- Top KPI Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">إجمالي الخدمات المتاحة[cite: 3]</p>
+                                <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="kpi-total-services">0</h3>
+                                <p class="text-[11px] text-teal-600 font-semibold mt-1">خدمات وإجراءات نشطة[cite: 3]</p>
+                            </div>
+                            <div class="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="sparkles" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">جلسات اليوم[cite: 3]</p>
+                                <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="kpi-today-sessions">0</h3>
+                                <p class="text-[11px] text-emerald-600 font-semibold mt-1">مجدولة وقيد التنفيذ[cite: 3]</p>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="calendar-check" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">إيرادات الخدمات (ر.س)[cite: 3]</p>
+                                <h3 class="text-2xl font-extrabold text-slate-900 mt-1" id="kpi-total-revenue">0</h3>
+                                <p class="text-[11px] text-teal-600 font-semibold mt-1">شامل الضريبة 5%[cite: 3]</p>
+                            </div>
+                            <div class="w-12 h-12 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="wallet" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">حالة التجربة[cite: 3]</p>
+                                <h3 class="text-lg font-bold text-emerald-600 mt-1">30 يوم مجاناً[cite: 3]</h3>
+                                <p class="text-[11px] text-slate-400 mt-1" id="kpi-trial-status">النسخة كاملة[cite: 3]</p>
+                            </div>
+                            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="award" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Live Sessions Overview -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">الجلسات المجدولة لليوم[cite: 3]</h3>
+                                <p class="text-xs text-slate-500">حالة المراجعين والخدمات الحالية[cite: 3]</p>
+                            </div>
+                            <button onclick="switchTab('bookings')" class="text-teal-600 hover:text-teal-700 text-xs font-bold flex items-center gap-1">
+                                عرض الكل[cite: 3]
+                                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                                        <th class="p-3">اسم المراجع/العميل[cite: 3]</th>
+                                        <th class="p-3">الخدمة المطلوبة[cite: 3]</th>
+                                        <th class="p-3">الأخصائي المعالج[cite: 3]</th>
+                                        <th class="p-3">الموعد[cite: 3]</th>
+                                        <th class="p-3">الحالة[cite: 3]</th>
+                                        <th class="p-3">إجراءات[cite: 3]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-recent-bookings" class="divide-y divide-slate-100">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SERVICE CATALOG (دليل الخدمات) -->
+                <div id="tab-services" class="tab-content space-y-6 hidden">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex flex-col md:flex-row items-md-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-lg">دليل الخدمات والإجراءات الطبية والتجميلية[cite: 3]</h3>
+                                <p class="text-xs text-slate-500">قائمة جميع الإجراءات المتاحة مع مدتها وتكلفة كل خدمة[cite: 3]</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <input type="text" id="search-services" oninput="filterServices()" placeholder="بحث باسم الخدمة أو الكود..." class="px-4 py-2 rounded-xl border border-slate-200 text-xs w-64 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                <button onclick="openServiceModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                    <i data-lucide="plus" class="w-4 h-4"></i>
+                                    إضافة خدمة جديدة[cite: 3]
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
+                                        <th class="p-3">كود الخدمة[cite: 3]</th>
+                                        <th class="p-3">اسم الخدمة/الإجراء[cite: 3]</th>
+                                        <th class="p-3">الفئة / القسم[cite: 3]</th>
+                                        <th class="p-3">المدة المقدرة[cite: 3]</th>
+                                        <th class="p-3">السعر (ر.س)[cite: 3]</th>
+                                        <th class="p-3">الحالة[cite: 3]</th>
+                                        <th class="p-3">الإجراءات[cite: 3]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="services-table-body" class="divide-y divide-slate-100">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: BOOKINGS & APPOINTMENTS (جدول الجلسات والمواعيد) -->
+                <div id="tab-bookings" class="tab-content space-y-6 hidden">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex flex-col md:flex-row items-md-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-lg">جدول الجلسات والمواعيد[cite: 3]</h3>
+                                <p class="text-xs text-slate-500">متابعة مواعيد المراجعين وتوزيعهم على الأخصائيين[cite: 3]</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <select id="filter-booking-status" onchange="renderBookingsTable()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none">
+                                    <option value="ALL">جميع الحالات[cite: 3]</option>
+                                    <option value="مجدول">مجدول[cite: 3]</option>
+                                    <option value="حضر">حضر[cite: 3]</option>
+                                    <option value="قيد الإجراء">قيد الإجراء[cite: 3]</option>
+                                    <option value="مكتمل">مكتمل[cite: 3]</option>
+                                    <option value="ملغى">ملغى[cite: 3]</option>
+                                </select>
+                                <button onclick="openBookingModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                                    حجز خدمة جديدة[cite: 3]
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
+                                        <th class="p-3">رقم الحجز[cite: 3]</th>
+                                        <th class="p-3">اسم المراجع[cite: 3]</th>
+                                        <th class="p-3">الخدمة المطلوبة[cite: 3]</th>
+                                        <th class="p-3">الأخصائي المعالج[cite: 3]</th>
+                                        <th class="p-3">تاريخ ووقت الجلسة[cite: 3]</th>
+                                        <th class="p-3">حالة الجلسة[cite: 3]</th>
+                                        <th class="p-3">تحديث الحالة[cite: 3]</th>
+                                        <th class="p-3">إجراءات[cite: 3]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookings-table-body" class="divide-y divide-slate-100">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: SESSION CLINICAL REPORTS (تقارير الجلسات) -->
+                <div id="tab-session-reports" class="tab-content space-y-6 hidden">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex flex-col md:flex-row items-md-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-lg">تقارير الجلسات والإجراءات الطبية[cite: 3]</h3>
+                                <p class="text-xs text-slate-500">توثيق ملاحظات الأخصائي وتوصيات المتابعة لكل مراجع[cite: 3]</p>
+                            </div>
+                        </div>
+
+                        <div class="grid lg:grid-cols-12 gap-6">
+                            <!-- Select booking to generate session report -->
+                            <div class="lg:col-span-5 bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 text-sm mb-3">اختر جلسة مكتملة لتوثيق التقرير[cite: 3]</h4>
+                                <div id="session-select-list" class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
+                                    <!-- Populated via JS -->
+                                </div>
+                            </div>
+
+                            <!-- Session Documentation Form -->
+                            <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200">
+                                <h4 class="font-bold text-slate-900 text-sm mb-4 border-b pb-2 flex items-center justify-between">
+                                    <span>تفاصيل التقرير الإجرائي[cite: 3]</span>
+                                    <span id="active-session-code" class="text-teal-600 text-xs font-mono">لم يتم الاختيار[cite: 3]</span>
+                                </h4>
+
+                                <form id="session-report-form" onsubmit="saveSessionReport(event)" class="space-y-4">
+                                    <input type="hidden" id="report-booking-id">
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1">اسم المراجع[cite: 3]</label>
+                                            <input type="text" id="report-client-name" readonly class="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1">الخدمة المنفذة[cite: 3]</label>
+                                            <input type="text" id="report-service-name" readonly class="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">الأخصائي المعالج[cite: 3]</label>
+                                        <input type="text" id="report-specialist-name" readonly class="w-full p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">ملاحظات وقراءات الجلسة (Clinical Notes)[cite: 3]</label>
+                                        <textarea id="report-notes" rows="3" required placeholder="سجل تفاصيل الجلسة، تفاعلات الجلد/الجسم، أو الإجراءات الدقيقة..." class="w-full p-3 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500"></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 mb-1">توصيات الأخصائي بعد الجلسة[cite: 3]</label>
+                                        <textarea id="report-recommendations" rows="2" placeholder="التعليمات الواجب اتباعها، العناية المنزلية، والاحتياطات..." class="w-full p-3 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500"></textarea>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1">تاريخ الجلسة القادمة (إن وجدت)[cite: 3]</label>
+                                            <input type="date" id="report-next-date" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1">اعتماد الأخصائي[cite: 3]</label>
+                                            <input type="text" id="report-signature" placeholder="توقيع/اسم الأخصائي" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-3 pt-2">
+                                        <button type="submit" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2">
+                                            <i data-lucide="save" class="w-4 h-4"></i>
+                                            حفظ وتوثيق التقرير[cite: 3]
+                                        </button>
+                                        <button type="button" onclick="printCurrentReport()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition flex items-center gap-2">
+                                            <i data-lucide="printer" class="w-4 h-4"></i>
+                                            طباعة[cite: 3]
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: SERVICE INVOICING & BILLING (الفواتير والمدفوعات) -->
+                <div id="tab-invoicing" class="tab-content space-y-6 hidden">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                        <div class="flex flex-col md:flex-row items-md-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-lg">الفواتير والمدفوعات للخدمات الطبية[cite: 3]</h3>
+                                <p class="text-xs text-slate-500">اصدار فاتورة ضريبية مبسطة (5% VAT) معتمدة للخدمات والجلسات[cite: 3]</p>
+                            </div>
+                            <button onclick="openInvoiceModal()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                إنشاء فاتورة جديدة[cite: 3]
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right text-xs">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold">
+                                        <th class="p-3">رقم الفاتورة[cite: 3]</th>
+                                        <th class="p-3">اسم المراجع[cite: 3]</th>
+                                        <th class="p-3">الخدمات المشمولة[cite: 3]</th>
+                                        <th class="p-3">المبلغ الخاضع للضريبة[cite: 3]</th>
+                                        <th class="p-3">الضريبة (5%)[cite: 3]</th>
+                                        <th class="p-3">الإجمالي النهائي[cite: 3]</th>
+                                        <th class="p-3">طريقة الدفع[cite: 3]</th>
+                                        <th class="p-3">إجراءات[cite: 3]</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoices-table-body" class="divide-y divide-slate-100">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: ANALYTICS (التحليلات والتقارير) -->
+                <div id="tab-analytics" class="tab-content space-y-6 hidden">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <h3 class="font-bold text-slate-900 text-base mb-1">أكثر الخدمات طلباً[cite: 3]</h3>
+                            <p class="text-xs text-slate-500 mb-4">توزيع الجلسات حسب نوع الخدمة[cite: 3]</p>
+                            <div class="h-64">
+                                <canvas id="chart-top-services"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                            <h3 class="font-bold text-slate-900 text-base mb-1">الإيرادات حسب التخصص/القسم[cite: 3]</h3>
+                            <p class="text-xs text-slate-500 mb-4">نسبة المساهمة في دخل المركز[cite: 3]</p>
+                            <div class="h-64">
+                                <canvas id="chart-revenue-dept"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+    </div>
+
+    <!-- MODAL 1: 30-DAY TRIAL REGISTRATION -->
+    <div id="trial-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-right">
+            <div class="text-center mb-5">
+                <div class="w-12 h-12 bg-teal-100 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="gift" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">ابدأ التجربة المجانية لمدة 30 يومًا[cite: 3]</h3>
+                <p class="text-xs text-slate-500 mt-1">وصول كامل لكافة صلاحيات ومميزات نظام أوريا لخدمات العيادات[cite: 3]</p>
+            </div>
+
+            <form onsubmit="activateTrial(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم المركز / العيادة[cite: 3]</label>
+                    <input type="text" id="trial-clinic-name" required placeholder="مثال: مركز أوريا الطبي التخصصي" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">الاسم الكامل لمدير النظام[cite: 3]</label>
+                    <input type="text" id="trial-admin-name" required placeholder="د. أحمد العتيبي" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">رقم الجوال[cite: 3]</label>
+                    <input type="tel" required placeholder="050XXXXXXX" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="submit" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition">تفعيل التجربة الآن[cite: 3]</button>
+                    <button type="button" onclick="closeTrialModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-3 rounded-xl text-xs transition">إلغاء[cite: 3]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD / EDIT SERVICE -->
+    <div id="service-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-right">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-3" id="service-modal-title">إضافة خدمة جديدة[cite: 3]</h3>
+            <form id="service-form" onsubmit="saveService(event)" class="space-y-4">
+                <input type="hidden" id="service-id">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">كود الخدمة[cite: 3]</label>
+                    <input type="text" id="service-code" required placeholder="SER-101" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-mono focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم الخدمة/الإجراء[cite: 3]</label>
+                    <input type="text" id="service-name" required placeholder="جلسة تنظيف بشرة عميق" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">القسم / التخصص[cite: 3]</label>
+                        <select id="service-category" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                            <option value="الجلدية والتجميل">الجلدية والتجميل[cite: 3]</option>
+                            <option value="الليزر والعناية">الليزر والعناية[cite: 3]</option>
+                            <option value="العلاج الطبيعي">العلاج الطبيعي[cite: 3]</option>
+                            <option value="الاستشارات">الاستشارات الطبية[cite: 3]</option>
+                            <option value="الفحوصات العامة">الفحوصات العامة[cite: 3]</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">المدة المقدرة[cite: 3]</label>
+                        <input type="text" id="service-duration" placeholder="45 دقيقة" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">السعر (ر.س)[cite: 3]</label>
+                    <input type="number" step="0.01" id="service-price" required placeholder="350" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="service-active" checked class="w-4 h-4 text-teal-600 rounded">
+                    <label for="service-active" class="text-xs font-bold text-slate-700">تفعيل الخدمة في الدليل[cite: 3]</label>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="submit" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition">حفظ الخدمة[cite: 3]</button>
+                    <button type="button" onclick="closeServiceModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs transition">إلغاء[cite: 3]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: BOOKING / APPOINTMENT CREATION -->
+    <div id="booking-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 text-right">
+            <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-3">حجز جلسة / خدمة جديدة[cite: 3]</h3>
+            <form id="booking-form" onsubmit="saveBooking(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">اسم المراجع/العميل[cite: 3]</label>
+                    <input type="text" id="booking-client" required placeholder="سارة الأحمد" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">اختر الخدمة المطلوبة[cite: 3]</label>
+                    <select id="booking-service-id" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">الأخصائي المعالج[cite: 3]</label>
+                    <select id="booking-specialist" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                        <option value="د. مريم الصالح (جلدية)">د. مريم الصالح (جلدية)[cite: 3]</option>
+                        <option value="د. خليل الشمري (علاج طبيعي)">د. خليل الشمري (علاج طبيعي)[cite: 3]</option>
+                        <option value="أخصائية سارة خالد (ليزر)">أخصائية سارة خالد (ليزر)[cite: 3]</option>
+                        <option value="د. عبدالله السيد (عام)">د. عبدالله السيد (عام)[cite: 3]</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">التاريخ[cite: 3]</label>
+                        <input type="date" id="booking-date" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">الوقت[cite: 3]</label>
+                        <input type="time" id="booking-time" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button type="submit" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition">تأكيد الحجز[cite: 3]</button>
+                    <button type="button" onclick="closeBookingModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs transition">إلغاء[cite: 3]</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: INVOICE GENERATOR & PRINT VIEW -->
+    <div id="invoice-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 text-right max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center border-b pb-3 mb-4 no-print">
+                <h3 class="text-lg font-bold text-slate-900">إنشاء فاتورة ضريبية للخدمات[cite: 3]</h3>
+                <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Printable Area -->
+            <div id="printable-invoice" class="space-y-4 text-xs">
+                <div class="text-center border-b pb-4">
+                    <h2 class="font-black text-xl text-slate-900">مركز أوريا لخدمات العيادات[cite: 3]</h2>
+                    <p class="text-slate-500">فاتورة ضريبية مبسطة (Simplified Tax Invoice)[cite: 3]</p>
+                    <p class="text-[10px] text-slate-400">الرقم الضريبي: 310982349100003[cite: 3]</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-3 rounded-xl">
+                    <div><strong>رقم الفاتورة:</strong> <span id="inv-num">INV-2026-001</span>[cite: 3]</div>
+                    <div><strong>التاريخ:</strong> <span id="inv-date">2026-10-14</span>[cite: 3]</div>
+                    <div><strong>اسم العميل:</strong> <span id="inv-client-disp">سارة الأحمد</span>[cite: 3]</div>
+                    <div><strong>طريقة الدفع:</strong> <span id="inv-method-disp">بطاقة مدى / Apple Pay</span>[cite: 3]</div>
+                </div>
+
+                <!-- Input selectors for Modal Form mode -->
+                <div class="no-print space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">اسم العميل/المراجع[cite: 3]</label>
+                        <input type="text" id="inv-input-client" value="سارة الأحمد" oninput="updateInvoicePreview()" class="w-full p-2 border border-slate-200 rounded-lg text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">اختر الخدمة[cite: 3]</label>
+                        <select id="inv-input-service" onchange="updateInvoicePreview()" class="w-full p-2 border border-slate-200 rounded-lg text-xs">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">طريقة الدفع[cite: 3]</label>
+                        <select id="inv-input-method" onchange="updateInvoicePreview()" class="w-full p-2 border border-slate-200 rounded-lg text-xs">
+                            <option value="بطاقة / Apple Pay">بطاقة / Apple Pay[cite: 3]</option>
+                            <option value="نقداً (Cash)">نقداً (Cash)[cite: 3]</option>
+                            <option value="تحويل بنكي">تحويل بنكي[cite: 3]</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Invoice Line Items -->
+                <table class="w-full text-right border-collapse my-3">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-100 font-bold text-slate-700">
+                            <th class="p-2">الخدمة/الإجراء[cite: 3]</th>
+                            <th class="p-2 text-center">الكمية[cite: 3]</th>
+                            <th class="p-2 text-left">السعر[cite: 3]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inv-items-body">
+                        <!-- Dynamic item line -->
+                    </tbody>
+                </table>
+
+                <!-- Calculation breakdown -->
+                <div class="border-t pt-3 space-y-1.5 text-xs text-left">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">المبلغ غير شامل الضريبة:[cite: 3]</span>
+                        <span font-mono id="inv-subtotal">0.00 ر.س[cite: 3]</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">ضريبة القيمة المضافة (5% VAT):[cite: 3]</span>
+                        <span font-mono id="inv-vat">0.00 ر.س[cite: 3]</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-black text-slate-900 border-t pt-2">
+                        <span>الإجمالي المطلوب:[cite: 3]</span>
+                        <span id="inv-total" class="text-teal-600">0.00 ر.س[cite: 3]</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t mt-4 no-print">
+                <button onclick="saveAndPrintInvoice()" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    حفظ وطباعة الفاتورة[cite: 3]
+                </button>
+                <button onclick="closeInvoiceModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-xs transition">إغلاق[cite: 3]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT -->
+    <script>
+        // CORE INITIAL STATE & STORAGE
+        const DEFAULT_SERVICES = [
+            { id: '1', code: 'SER-101', name: 'جلسة ليزر إزالة الشعر (جسم كامل)', category: 'الليزر والعناية', duration: '60 دقيقة', price: 450, active: true },
+            { id: '2', code: 'SER-102', name: 'جلسة تنظيف بشرة هيدرافيسيل', category: 'الجلدية والتجميل', duration: '45 دقيقة', price: 300, active: true },
+            { id: '3', code: 'SER-103', name: 'استشارة طبية تخصصية', category: 'الاستشارات', duration: '30 دقيقة', price: 200, active: true },
+            { id: '4', code: 'SER-104', name: 'جلسة علاج طبيعي وإعادة تأهيل', category: 'العلاج الطبيعي', duration: '50 دقيقة', price: 250, active: true },
+            { id: '5', code: 'SER-105', name: 'جلسة حقن نضارة وحمض الهيالورونيك', category: 'الجلدية والتجميل', duration: '30 دقيقة', price: 800, active: true }
+        ];
+
+        const DEFAULT_BOOKINGS = [
+            { id: 'BK-1001', client: 'سارة الأحمد', serviceId: '2', serviceName: 'جلسة تنظيف بشرة هيدرافيسيل', specialist: 'د. مريم الصالح (جلدية)', date: '2026-10-14', time: '10:00', status: 'مكتمل' },
+            { id: 'BK-1002', client: 'محمد الشمري', serviceId: '4', serviceName: 'جلسة علاج طبيعي وإعادة تأهيل', specialist: 'د. خليل الشمري (علاج طبيعي)', date: '2026-10-14', time: '11:30', status: 'قيد الإجراء' },
+            { id: 'BK-1003', client: 'ريم خالد', serviceId: '1', serviceName: 'جلسة ليزر إزالة الشعر (جسم كامل)', specialist: 'أخصائية سارة خالد (ليزر)', date: '2026-10-14', time: '02:00', status: 'مجدول' }
+        ];
+
+        const DEFAULT_REPORTS = [
+            {
+                bookingId: 'BK-1001',
+                client: 'سارة الأحمد',
+                service: 'جلسة تنظيف بشرة هيدرافيسيل',
+                specialist: 'د. مريم الصالح (جلدية)',
+                notes: 'تمت الجلسة بنجاح واستجابة الجلد ممتازة دون أي تهج. تم استخدام سيروم النضارة الفائق.',
+                recommendations: 'تجنب التعرض المباشر للشمس لمدة 48 ساعة، استخدام واقي الشمس واستعمال المرطب المناسب.',
+                nextDate: '2026-11-14',
+                signature: 'د. مريم الصالح'
+            }
+        ];
+
+        const DEFAULT_INVOICES = [
+            { id: 'INV-2026-001', client: 'سارة الأحمد', serviceName: 'جلسة تنظيف بشرة هيدرافيسيل', subtotal: 285.71, vat: 14.29, total: 300, method: 'بطاقة / Apple Pay', date: '2026-10-14' }
+        ];
+
+        // App Reactive State
+        let services = JSON.parse(localStorage.getItem('aurea_services')) || DEFAULT_SERVICES;
+        let bookings = JSON.parse(localStorage.getItem('aurea_bookings')) || DEFAULT_BOOKINGS;
+        let reports = JSON.parse(localStorage.getItem('aurea_reports')) || DEFAULT_REPORTS;
+        let invoices = JSON.parse(localStorage.getItem('aurea_invoices')) || DEFAULT_INVOICES;
+        let currentUser = JSON.parse(localStorage.getItem('aurea_user')) || null;
+        let trialActive = localStorage.getItem('aurea_trial_active') !== 'false';
+
+        // Initialize Icons & Page State
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkUserSession();
+            updateTrialBanner();
+            renderAll();
+        });
+
+        // Sync State to LocalStorage
+        function saveData() {
+            localStorage.setItem('aurea_services', JSON.stringify(services));
+            localStorage.setItem('aurea_bookings', JSON.stringify(bookings));
+            localStorage.setItem('aurea_reports', JSON.stringify(reports));
+            localStorage.setItem('aurea_invoices', JSON.stringify(invoices));
+            if (currentUser) localStorage.setItem('aurea_user', JSON.stringify(currentUser));
+            else localStorage.removeItem('aurea_user');
+        }
+
+        // Notification Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-xl text-xs font-bold text-white transition transform duration-300 pointer-events-auto flex items-center gap-2 ${type === 'success' ? 'bg-teal-600' : 'bg-rose-600'}`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle-2' : 'alert-circle'}" class="w-4 h-4"></i> ${message}`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ROLE LOGINS & AUTHENTICATION
+        function loginAs(role) {
+            if (role === 'admin') {
+                currentUser = { name: 'د. أحمد العتيبي', role: 'مدير النظام (Admin)', roleCode: 'admin' };
+            } else if (role === 'specialist') {
+                currentUser = { name: 'د. مريم الصالح', role: 'دكتور / أخصائي معالج', roleCode: 'specialist' };
+            } else {
+                currentUser = { name: 'منيرة السعد', role: 'استقبال وحجوزات', roleCode: 'reception' };
+            }
+            saveData();
+            checkUserSession();
+            showToast(`تم تسجيل الدخول بنجاح بصفتك: ${currentUser.name}`);
+        }
+
+        function handleManualLogin(e) {
+            e.preventDefault();
+            currentUser = { name: 'مدير النظام', role: 'مدير النظام (Admin)', roleCode: 'admin' };
+            saveData();
+            checkUserSession();
+            showToast('تم الدخول إلى لوحة التحكّم.');
+        }
+
+        function logout() {
+            currentUser = null;
+            saveData();
+            checkUserSession();
+            showToast('تم تسجيل الخروج.');
+        }
+
+        function checkUserSession() {
+            const landing = document.getElementById('landing-page');
+            const app = document.getElementById('erp-app');
+            const trialBanner = document.getElementById('trial-banner');
+
+            if (currentUser) {
+                landing.classList.add('hidden');
+                app.classList.remove('hidden');
+                if (trialActive) trialBanner.classList.remove('hidden');
+
+                document.getElementById('current-user-name').innerText = currentUser.name;
+                document.getElementById('current-user-role').innerText = currentUser.role;
+                document.getElementById('current-user-avatar').innerText = currentUser.name.charAt(0);
+            } else {
+                landing.classList.remove('hidden');
+                app.classList.add('hidden');
+                trialBanner.classList.add('hidden');
+            }
+        }
+
+        function scrollToLogin() {
+            document.getElementById('login-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // TAB NAVIGATION
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-teal-600', 'text-white');
+                el.classList.add('text-slate-400');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            const activeNav = document.getElementById(`nav-${tabId}`);
+
+            if (activeTab) activeTab.classList.remove('hidden');
+            if (activeNav) {
+                activeNav.classList.add('bg-teal-600', 'text-white');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            // Update titles
+            const titles = {
+                dashboard: ['لوحة التحكم الرئيسية', 'ملخص نشاط الجلسات، الخدمات والإيرادات اليومية'],
+                services: ['دليل الخدمات والإجراءات', 'إدارة وتنظيم كافة الإجراءات والأسعار المتاحة'],
+                bookings: ['جدول الجلسات والمواعيد', 'جدولة مواعيد المراجعين وتخصيص الأخصائيين'],
+                'session-reports': ['تقارير الجلسات الإجرائية', 'توثيق ملاحظات وتوصيات الأخصائي بعد كل جلسة'],
+                invoicing: ['الفواتير والمدفوعات', 'إصدار وطباعة الفواتير الضريبية المبسطة'],
+                analytics: ['التحليلات والتقارير', 'مؤشرات الأداء ورسم بيان الخدمات الأكثر طلباً']
+            };
+
+            if (titles[tabId]) {
+                document.getElementById('page-title').innerText = titles[tabId][0];
+                document.getElementById('page-subtitle').innerText = titles[tabId][1];
+            }
+
+            if (tabId === 'analytics') renderCharts();
+        }
+
+        // RENDER FUNCTIONS
+        function renderAll() {
+            renderDashboard();
+            renderServicesTable();
+            renderBookingsTable();
+            renderSessionSelectList();
+            renderInvoicesTable();
+            populateDropdowns();
+        }
+
+        function renderDashboard() {
+            document.getElementById('kpi-total-services').innerText = services.filter(s => s.active).length;
+            document.getElementById('kpi-today-sessions').innerText = bookings.length;
+            const totalRev = invoices.reduce((acc, curr) => acc + (curr.total || 0), 0);
+            document.getElementById('kpi-total-revenue').innerText = totalRev.toLocaleString('ar-SA', { minimumFractionDigits: 2 });
+
+            const tbody = document.getElementById('dashboard-recent-bookings');
+            tbody.innerHTML = bookings.slice(0, 5).map(b => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="p-3 font-bold text-slate-800">${b.client}</td>
+                    <td class="p-3 text-slate-600">${b.serviceName}</td>
+                    <td class="p-3 text-slate-500">${b.specialist}</td>
+                    <td class="p-3 font-mono text-slate-600">${b.date} ${b.time}</td>
+                    <td class="p-3">${getStatusBadge(b.status)}</td>
+                    <td class="p-3">
+                        <button onclick="switchTab('bookings')" class="text-teal-600 hover:underline font-bold text-[11px]">متابعة</button>
+                    </td>
+                </tr>
+            `).join('') || `<tr><td colspan="6" class="p-4 text-center text-slate-400">لا توجد جلسات مسجلة اليوم</td></tr>`;
+        }
+
+        function getStatusBadge(status) {
+            const styles = {
+                'مجدول': 'bg-amber-100 text-amber-800 border-amber-200',
+                'حضر': 'bg-sky-100 text-sky-800 border-sky-200',
+                'قيد الإجراء': 'bg-purple-100 text-purple-800 border-purple-200',
+                'مكتمل': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                'ملغى': 'bg-rose-100 text-rose-800 border-rose-200'
+            };
+            return `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${styles[status] || 'bg-slate-100 text-slate-700'}">${status}</span>`;
+        }
+
+        function renderServicesTable() {
+            const tbody = document.getElementById('services-table-body');
+            tbody.innerHTML = services.map(s => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="p-3 font-mono font-bold text-teal-700">${s.code}</td>
+                    <td class="p-3 font-bold text-slate-900">${s.name}</td>
+                    <td class="p-3 text-slate-600">${s.category}</td>
+                    <td class="p-3 text-slate-500">${s.duration}</td>
+                    <td class="p-3 font-bold text-slate-800">${s.price.toFixed(2)} ر.س</td>
+                    <td class="p-3">
+                        <button onclick="toggleServiceStatus('${s.id}')" class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                            ${s.active ? 'نشط' : 'غير نشط'}
+                        </button>
+                    </td>
+                    <td class="p-3 flex items-center gap-2">
+                        <button onclick="editService('${s.id}')" class="text-sky-600 hover:text-sky-800"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                        <button onclick="deleteService('${s.id}')" class="text-rose-500 hover:text-rose-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderBookingsTable() {
+            const filter = document.getElementById('filter-booking-status').value;
+            const filtered = filter === 'ALL' ? bookings : bookings.filter(b => b.status === filter);
+            const tbody = document.getElementById('bookings-table-body');
+
+            tbody.innerHTML = filtered.map(b => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="p-3 font-mono text-slate-500">${b.id}</td>
+                    <td class="p-3 font-bold text-slate-900">${b.client}</td>
+                    <td class="p-3 text-slate-700 font-medium">${b.serviceName}</td>
+                    <td class="p-3 text-slate-600">${b.specialist}</td>
+                    <td class="p-3 font-mono text-slate-600">${b.date} - ${b.time}</td>
+                    <td class="p-3">${getStatusBadge(b.status)}</td>
+                    <td class="p-3">
+                        <select onchange="updateBookingStatus('${b.id}', this.value)" class="text-[11px] p-1 border rounded bg-white">
+                            <option value="مجدول" ${b.status === 'مجدول' ? 'selected' : ''}>مجدول</option>
+                            <option value="حضر" ${b.status === 'حضر' ? 'selected' : ''}>حضر</option>
+                            <option value="قيد الإجراء" ${b.status === 'قيد الإجراء' ? 'selected' : ''}>قيد الإجراء</option>
+                            <option value="مكتمل" ${b.status === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
+                            <option value="ملغى" ${b.status === 'ملغى' ? 'selected' : ''}>ملغى</option>
+                        </select>
+                    </td>
+                    <td class="p-3 flex gap-2">
+                        <button onclick="selectBookingForReport('${b.id}')" class="bg-teal-50 text-teal-700 hover:bg-teal-100 px-2 py-1 rounded text-[11px] font-bold">التقرير</button>
+                        <button onclick="generateInvoiceForBooking('${b.id}')" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-2 py-1 rounded text-[11px] font-bold">فاتورة</button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function renderSessionSelectList() {
+            const list = document.getElementById('session-select-list');
+            list.innerHTML = bookings.map(b => `
+                <div onclick="selectBookingForReport('${b.id}')" class="p-3 rounded-xl border border-slate-200 bg-white hover:border-teal-500 cursor-pointer transition flex items-center justify-between">
+                    <div>
+                        <h5 class="font-bold text-slate-900 text-xs">${b.client}</h5>
+                        <p class="text-[10px] text-slate-500">${b.serviceName}</p>
+                    </div>
+                    <div class="text-left">
+                        <span class="text-[10px] font-mono block text-slate-400">${b.id}</span>
+                        ${getStatusBadge(b.status)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectBookingForReport(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) return;
+
+            switchTab('session-reports');
+            document.getElementById('report-booking-id').value = booking.id;
+            document.getElementById('active-session-code').innerText = booking.id;
+            document.getElementById('report-client-name').value = booking.client;
+            document.getElementById('report-service-name').value = booking.serviceName;
+            document.getElementById('report-specialist-name').value = booking.specialist;
+
+            const existing = reports.find(r => r.bookingId === bookingId);
+            if (existing) {
+                document.getElementById('report-notes').value = existing.notes;
+                document.getElementById('report-recommendations').value = existing.recommendations;
+                document.getElementById('report-next-date').value = existing.nextDate || '';
+                document.getElementById('report-signature').value = existing.signature;
+            } else {
+                document.getElementById('report-notes').value = '';
+                document.getElementById('report-recommendations').value = '';
+                document.getElementById('report-next-date').value = '';
+                document.getElementById('report-signature').value = booking.specialist;
+            }
+        }
+
+        function saveSessionReport(e) {
+            e.preventDefault();
+            const bookingId = document.getElementById('report-booking-id').value;
+            if (!bookingId) {
+                showToast('الرجاء اختيار جلسة من القائمة أولاً', 'error');
+                return;
+            }
+
+            const newReport = {
+                bookingId,
+                client: document.getElementById('report-client-name').value,
+                service: document.getElementById('report-service-name').value,
+                specialist: document.getElementById('report-specialist-name').value,
+                notes: document.getElementById('report-notes').value,
+                recommendations: document.getElementById('report-recommendations').value,
+                nextDate: document.getElementById('report-next-date').value,
+                signature: document.getElementById('report-signature').value
+            };
+
+            const index = reports.findIndex(r => r.bookingId === bookingId);
+            if (index > -1) reports[index] = newReport;
+            else reports.push(newReport);
+
+            saveData();
+            showToast('تم حفظ توثيق تقرير الجلسة بنجاح');
+        }
+
+        function printCurrentReport() {
+            window.print();
+        }
+
+        function renderInvoicesTable() {
+            const tbody = document.getElementById('invoices-table-body');
+            tbody.innerHTML = invoices.map(i => `
+                <tr class="hover:bg-slate-50 border-b border-slate-100">
+                    <td class="p-3 font-mono font-bold text-teal-700">${i.id}</td>
+                    <td class="p-3 font-bold text-slate-900">${i.client}</td>
+                    <td class="p-3 text-slate-600">${i.serviceName}</td>
+                    <td class="p-3 font-mono">${i.subtotal.toFixed(2)} ر.س</td>
+                    <td class="p-3 font-mono text-emerald-600">${i.vat.toFixed(2)} ر.س</td>
+                    <td class="p-3 font-mono font-bold text-slate-900">${i.total.toFixed(2)} ر.س</td>
+                    <td class="p-3 text-slate-500">${i.method}</td>
+                    <td class="p-3">
+                        <button onclick="reprintInvoice('${i.id}')" class="text-teal-600 hover:text-teal-800 font-bold flex items-center gap-1">
+                            <i data-lucide="printer" class="w-3.5 h-3.5"></i> طباعة
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function populateDropdowns() {
+            const bookingSelect = document.getElementById('booking-service-id');
+            const invServiceSelect = document.getElementById('inv-input-service');
+
+            const options = services.filter(s => s.active).map(s => `<option value="${s.id}" data-price="${s.price}">${s.name} (${s.price} ر.س)</option>`).join('');
+
+            if (bookingSelect) bookingSelect.innerHTML = options;
+            if (invServiceSelect) invServiceSelect.innerHTML = options;
+        }
+
+        // SERVICE MANAGEMENT ACTIONS
+        function openServiceModal() {
+            document.getElementById('service-id').value = '';
+            document.getElementById('service-form').reset();
+            document.getElementById('service-modal-title').innerText = 'إضافة خدمة جديدة';
+            document.getElementById('service-modal').classList.remove('hidden');
+        }
+
+        function closeServiceModal() {
+            document.getElementById('service-modal').classList.add('hidden');
+        }
+
+        function saveService(e) {
+            e.preventDefault();
+            const id = document.getElementById('service-id').value || Date.now().toString();
+            const serviceData = {
+                id,
+                code: document.getElementById('service-code').value,
+                name: document.getElementById('service-name').value,
+                category: document.getElementById('service-category').value,
+                duration: document.getElementById('service-duration').value,
+                price: parseFloat(document.getElementById('service-price').value),
+                active: document.getElementById('service-active').checked
+            };
+
+            const index = services.findIndex(s => s.id === id);
+            if (index > -1) services[index] = serviceData;
+            else services.push(serviceData);
+
+            saveData();
+            renderAll();
+            closeServiceModal();
+            showToast('تم حفظ الخدمة بنجاح');
+        }
+
+        function toggleServiceStatus(id) {
+            const s = services.find(x => x.id === id);
+            if (s) {
+                s.active = !s.active;
+                saveData();
+                renderAll();
+                showToast(`تم ${s.active ? 'تفعيل' : 'تعطيل'} الخدمة بنجاح`);
+            }
+        }
+
+        function deleteService(id) {
+            if (confirm('هل أنت تأكد من حذف هذه الخدمة من الدليل؟')) {
+                services = services.filter(s => s.id !== id);
+                saveData();
+                renderAll();
+                showToast('تم حذف الخدمة.');
+            }
+        }
+
+        // BOOKING ACTIONS
+        function openBookingModal() {
+            document.getElementById('booking-form').reset();
+            document.getElementById('booking-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('booking-modal').classList.remove('hidden');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('booking-modal').classList.add('hidden');
+        }
+
+        function saveBooking(e) {
+            e.preventDefault();
+            const serviceId = document.getElementById('booking-service-id').value;
+            const service = services.find(s => s.id === serviceId);
+
+            const newBooking = {
+                id: 'BK-' + Math.floor(1000 + Math.random() * 9000),
+                client: document.getElementById('booking-client').value,
+                serviceId,
+                serviceName: service ? service.name : 'خدمة مخصصة',
+                specialist: document.getElementById('booking-specialist').value,
+                date: document.getElementById('booking-date').value,
+                time: document.getElementById('booking-time').value,
+                status: 'مجدول'
+            };
+
+            bookings.unshift(newBooking);
+            saveData();
+            renderAll();
+            closeBookingModal();
+            showToast('تم حجز الجلسة بنجاح');
+        }
+
+        function updateBookingStatus(id, newStatus) {
+            const booking = bookings.find(b => b.id === id);
+            if (booking) {
+                booking.status = newStatus;
+                saveData();
+                renderDashboard();
+                showToast(`تم تحديث حالة الجلسة إلى: ${newStatus}`);
+            }
+        }
+
+        // INVOICING ACTIONS
+        function openInvoiceModal() {
+            document.getElementById('inv-num').innerText = 'INV-2026-' + Math.floor(100 + Math.random() * 900);
+            document.getElementById('inv-date').innerText = new Date().toISOString().split('T')[0];
+            updateInvoicePreview();
+            document.getElementById('invoice-modal').classList.remove('hidden');
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('invoice-modal').classList.add('hidden');
+        }
+
+        function generateInvoiceForBooking(bookingId) {
+            const booking = bookings.find(b => b.id === bookingId);
+            if (!booking) return;
+
+            openInvoiceModal();
+            document.getElementById('inv-input-client').value = booking.client;
+            if (booking.serviceId) document.getElementById('inv-input-service').value = booking.serviceId;
+            updateInvoicePreview();
+        }
+
+        function updateInvoicePreview() {
+            const clientName = document.getElementById('inv-input-client').value || 'عميل نقدي';
+            const serviceId = document.getElementById('inv-input-service').value;
+            const method = document.getElementById('inv-input-method').value;
+            const service = services.find(s => s.id === serviceId) || { name: 'خدمة عامة', price: 0 };
+
+            document.getElementById('inv-client-disp').innerText = clientName;
+            document.getElementById('inv-method-disp').innerText = method;
+
+            const total = service.price;
+            const vat = total * 0.05;
+            const subtotal = total - vat;
+
+            document.getElementById('inv-items-body').innerHTML = `
+                <tr class="border-b border-slate-100">
+                    <td class="p-2 font-bold text-slate-800">${service.name}</td>
+                    <td class="p-2 text-center">1</td>
+                    <td class="p-2 text-left font-mono">${service.price.toFixed(2)} ر.س</td>
+                </tr>
+            `;
+
+            document.getElementById('inv-subtotal').innerText = `${subtotal.toFixed(2)} ر.س`;
+            document.getElementById('inv-vat').innerText = `${vat.toFixed(2)} ر.س`;
+            document.getElementById('inv-total').innerText = `${total.toFixed(2)} ر.س`;
+        }
+
+        function saveAndPrintInvoice() {
+            const serviceId = document.getElementById('inv-input-service').value;
+            const service = services.find(s => s.id === serviceId) || { name: 'خدمة عامة', price: 0 };
+            const total = service.price;
+            const vat = total * 0.05;
+
+            const newInv = {
+                id: document.getElementById('inv-num').innerText,
+                client: document.getElementById('inv-input-client').value,
+                serviceName: service.name,
+                subtotal: total - vat,
+                vat,
+                total,
+                method: document.getElementById('inv-input-method').value,
+                date: document.getElementById('inv-date').innerText
+            };
+
+            invoices.unshift(newInv);
+            saveData();
+            renderAll();
+            window.print();
+            closeInvoiceModal();
+            showToast('تم إصدار وحفظ الفاتورة الضريبية بنجاح');
+        }
+
+        // TRIAL MODAL ACTIONS
+        function openTrialModal() {
+            document.getElementById('trial-modal').classList.remove('hidden');
+        }
+
+        function closeTrialModal() {
+            document.getElementById('trial-modal').classList.add('hidden');
+        }
+
+        function activateTrial(e) {
+            e.preventDefault();
+            trialActive = true;
+            localStorage.setItem('aurea_trial_active', 'true');
+
+            const clinicName = document.getElementById('trial-clinic-name').value;
+            currentUser = { name: document.getElementById('trial-admin-name').value, role: 'مدير النظام (Admin)', roleCode: 'admin' };
+            saveData();
+
+            closeTrialModal();
+            checkUserSession();
+            showToast(`تم تفعيل التجربة المجانية لمده 30 يوماً لـ ${clinicName}`);
+        }
+
+        function dismissTrialBanner() {
+            document.getElementById('trial-banner').classList.add('hidden');
+        }
+
+        function updateTrialBanner() {
+            document.getElementById('trial-days-left').innerText = 'متبقي 30 يوماً';
+        }
+
+        // CHARTS SETUP
+        let topServicesChart = null;
+        let deptChart = null;
+
+        function renderCharts() {
+            const ctx1 = document.getElementById('chart-top-services');
+            const ctx2 = document.getElementById('chart-revenue-dept');
+
+            if (!ctx1 || !ctx2) return;
+
+            if (topServicesChart) topServicesChart.destroy();
+            if (deptChart) deptChart.destroy();
+
+            topServicesChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['ليزر إزالة الشعر', 'تنظيف بشرة', 'حقن نضارة', 'علاج طبيعي', 'استشارات'],
+                    datasets: [{
+                        label: 'عدد الجلسات',
+                        data: [42, 28, 19, 15, 12],
+                        backgroundColor: '#0d9488',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            deptChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['الجلدية والتجميل', 'الليزر والعناية', 'العلاج الطبيعي', 'الاستشارات'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: ['#0d9488', '#10b981', '#0284c7', '#f59e0b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    </script>
+</body>
+</html>
